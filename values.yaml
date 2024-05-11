@@ -1,0 +1,61 @@
+haproxy:
+  image: "haproxy:2.5.6-alpine"
+  nameOverride: ""
+  fullnameOverride: ""
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+  imagePullSecrets: null
+  pdb:
+    enabled: true
+    spec:
+      minAvailable: 1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 99
+    runAsGroup: 99
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+  automountServiceAccountToken: false
+  hosts:
+    - name: "host1"
+      dsn: "192.168.1.1:5432"
+      extraOptions: "maxconn 100"
+    - name: "host2"
+      dsn: "192.168.1.2:5432"
+      extraOptions: "maxconn 100"
+  ports:
+    master: 15432
+    slave: 15433
+    patroni: 8009
+  logLevel: "info"
+  config: null #Config values are getting into the helm chart from /configs/haproxy.cfg by --set-file or fill this key with |-
+  tolerations: null
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "haproxy.name" . }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
+          topologyKey: kubernetes.io/hostname
+        weight: 100
+    # nodeAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #     - matchExpressions:
+    #       - key: topology.kubernetes.io/zone
+    #         operator: In
+    #         values:
+    #         - antarctica-east1
+    #         - antarctica-west1

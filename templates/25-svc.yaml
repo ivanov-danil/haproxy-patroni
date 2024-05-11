@@ -1,0 +1,30 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "haproxy.fullname" . }}-patroni-master
+  labels:
+{{- include "common_labels" . | indent 4 }}
+spec:
+  selector:
+{{- include "selector_labels" . | indent 4 }}
+  ports:
+  - name: master
+    port: 5432
+    protocol: TCP
+    targetPort: {{ .Values.haproxy.ports.master }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "haproxy.fullname" . }}-patroni-slave
+  labels:
+{{- include "common_labels" . | indent 4 }}
+spec:
+  selector:
+{{- include "selector_labels" . | indent 4 }}
+  ports:
+  - name: slave
+    port: 5432
+    protocol: TCP
+    targetPort: {{ .Values.haproxy.ports.slave }}

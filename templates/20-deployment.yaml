@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "haproxy.fullname" . }}
+  labels:
+{{- include "common_labels" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+{{- include "selector_labels" . | indent 6 }}
+{{- with .Values.haproxy.strategy }}
+  strategy:
+{{- toYaml . | nindent 4 }}
+{{- end }}
+  replicas: {{ .Values.haproxy.replicas }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/10-cm.yaml") $ | sha256sum }}
+      labels:
+{{- include "common_labels" . | indent 8 }}
+    spec:
+{{- with .Values.haproxy.tolerations }}
+      tolerations:
+{{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.haproxy.affinity }}
+      affinity:
+{{- tpl (toYaml .) $ | nindent 8 }}
+{{- end }}
+      volumes:
+      - name: {{ include "haproxy.fullname" . }}-config
+        configMap:
+          name: {{ include "haproxy.fullname" . }}-config
+{{- with .Values.haproxy.imagePullSecrets }}
+      imagePullSecrets:
+{{- toYaml . | nindent 8 }}
+{{- end }}
+      automountServiceAccountToken: {{ .Values.haproxy.automountServiceAccountToken }}
+{{- with .Values.haproxy.securityContext}}
+      securityContext:
+{{- toYaml . | nindent 8 }}
+{{- end }}
+      containers:
+      - name: haproxy
+        image: {{ .Values.haproxy.image }}
+        volumeMounts:
+        - name: {{ include "haproxy.fullname" . }}-config
+          mountPath: /usr/local/etc/haproxy/haproxy.cfg
+          subPath: haproxy.cfg
+{{- with .Values.haproxy.containerSecurityContext}}
+        securityContext:
+{{- toYaml . | nindent 10 }}
+{{- end }}
+{{- with .Values.haproxy.resources}}
+        resources:
+{{- toYaml . | nindent 10 }}
+{{- end }}
+{{- include "probes" . | indent 8 }}
+      terminationGracePeriodSeconds: 60

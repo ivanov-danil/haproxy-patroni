@@ -1,0 +1,13 @@
+{{- if not .Values.haproxy.config }}
+{{- fail "Config is required! Fill the key '.Values.haproxy.config' with the valid config" }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "haproxy.fullname" . }}-config
+  labels:
+{{- include "common_labels" . | indent 4 }}
+data:
+  haproxy.cfg: |
+{{ tpl (.Values.haproxy.config) . | indent 4 }}

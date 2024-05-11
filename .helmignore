@@ -1,0 +1,5 @@
+.helmignore
+.git
+.gitignore
+README.md
+LICENSE

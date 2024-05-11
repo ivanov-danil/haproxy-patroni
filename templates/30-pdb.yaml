@@ -1,0 +1,16 @@
+{{- if and (gt (.Values.haproxy.replicas | int) 1) (.Values.haproxy.pdb.enabled) }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "haproxy.fullname" . }}
+  labels:
+{{- include "common_labels" . | indent 4 }}
+spec:
+{{- with .Values.haproxy.pdb.spec }}
+{{- toYaml . | nindent 2 }}
+{{- end }}
+  selector:
+    matchLabels:
+{{- include "selector_labels" . | indent 6 }}
+{{- end }}
