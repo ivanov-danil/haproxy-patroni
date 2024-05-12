@@ -45,6 +45,10 @@ spec:
       containers:
       - name: haproxy
         image: {{ .Values.haproxy.image }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "kill -USR1 $(pidof haproxy); while killall -0 haproxy; do sleep 1; done"]
         volumeMounts:
         - name: {{ include "haproxy.fullname" . }}-config
           mountPath: /usr/local/etc/haproxy/haproxy.cfg
